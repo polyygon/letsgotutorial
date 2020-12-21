@@ -1,15 +1,13 @@
-package main
+package main 
 
 import (
 	"fmt"
 	"log"
+	"html/template"
 	"net/http"
 	"strconv"
 )
 
-// Define a home handler function which writes a byte slice containing
-// "Hello from Snippetbox" as the response body.
- 
 func home(w http.ResponseWriter, r *http.Request) {
 	//404 invalid paths
 	if r.URL.Path != "/" {
@@ -17,7 +15,20 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Hello from Snippetbox"))
+	ts, err := template.ParseFiles("./ui/html/home.page.tmpl")
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	err = ts.Execute(w, nil)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+	}
+
+	//w.Write([]byte("Hello from Snippetbox"))
 }
 
 //add showSnippet handler function 
@@ -41,16 +52,3 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte("Create a new snippet..."))
 } 
-
-func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
-
-//
-	log.Println("Starting server on :4000")
-    err := http.ListenAndServe(":4000", mux)
-    log.Fatal(err)
-
-}
